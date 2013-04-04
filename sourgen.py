@@ -4,6 +4,7 @@
 ### File for generation file(s) for fake feed
 
 import os
+import sys
 
 from optparse import OptionParser
 from random import randint
@@ -22,7 +23,7 @@ def generate_ip4(cnt, flg):
         print 'IPv4 addresses will not be added in file'
     else:
         if flg == False:
-            print '\rStart of generation of real IPv4 addresses'
+            print 'Start of generation of real IPv4 addresses'
             for _ in range(cnt):
                 octet1 = octet2 = octet3 = octet4 = 0
                 octet1 = randint(1, 223)
@@ -31,8 +32,8 @@ def generate_ip4(cnt, flg):
                 octet2 = randint(0, 255)
                 octet3 = randint(0, 255)
                 octet4 = randint(1, 254)
-                ip4_list.append(str(octet1) + '.' + str(octet2) + '.' + str(octet3) + '.' + str(octet4))
-            print "\r Done"
+                ip4_list.append('%d.%d.%d.%d' % (octet1, octet2, octet3, octet4))
+                progress_bar(_, cnt)
         else:
             print 'Start of generation of grey IPv4 addresses'
             private_network_first_octet = [10, 172, 192]
@@ -47,8 +48,8 @@ def generate_ip4(cnt, flg):
                     octet2 = randint(0, 255)
                 octet3 = randint(0, 255)
                 octet4 = randint(1, 254)
-                ip4_list.append(str(octet1) + '.' + str(octet2) + '.' + str(octet3) + '.' + str(octet4))
-    
+                ip4_list.append('%d.%d.%d.%d' % (octet1, octet2, octet3, octet4))
+                progress_bar(_, cnt)
     return ip4_list
 
 ### =================================================================
@@ -62,6 +63,7 @@ def generate_ip6(cnt):
         i = 0
         for _ in range(cnt):
             ip6_list.append("2001:" + ":".join(("%x" % randint(0, 65536) for j in range(7))))
+            progress_bar(_, cnt)
     return ip6_list
 
 ### =================================================================
@@ -77,27 +79,24 @@ def generate_domain(cnt):
         print 'Start of generation of Domains'
         for i in range(cnt):
             dom = ''
-            for j in range(10): ### there is length of domain name
+            for _ in range(10): ### there is length of domain name
                 dom = dom + choice(letters[:26])
             domain_level_0 = choice(tld0)
             domain_level_1 = choice(tld1)
-            dom = dom + '.' + domain_level_1 + '.' + domain_level_0
-            dom_list.append(dom)
+            dom_list.append(dom + '.' + domain_level_1 + '.' + domain_level_0)
+            progress_bar(i, cnt)
     return dom_list
 
 ### =================================================================
-def store_in_file(flg, filname, ip4_data, ip6_data, dom_data):
-    """
-      flg - flag that shows create all items in one file (false) or separete it by type (True)
-      filname - file name
-    """
-    if flg == False:
+def store_in_file(store_in_diff_file, filename, ip4_data, ip6_data, dom_data):
+
+    if store_in_diff_file == False:
         for exist_files in os.listdir("./"):
-            if exist_files == filname:
-                filname = filname + str(1)
-                print "WARNING: file name was changed !!!" 
-        print "Start of writing items in file %s" % filname
-        with open(filname, 'w') as f:
+           if exist_files == filename:
+               filename = filename + str(1)
+               print "WARNING: file name was changed !!!"
+        print "Start of writing items in file %s" % filename
+        with open(filename, 'w') as f:
             for line in ip4_data:
                 print >> f, line
             for line in ip6_data:
@@ -106,19 +105,26 @@ def store_in_file(flg, filname, ip4_data, ip6_data, dom_data):
                 print >> f, line
     else:
         for exist_files in os.listdir("./"):
-            if (exist_files.split('.')[0]) == filname:
-                filname = filname + str(1)
+            if (exist_files.split('.')[0]) == filename:
+                filename = filename + str(1)
                 print "WARNING: file name was changed !!!"   
-        print "Start of writing items in separate files: %s.ip4, %s.ip6, %s.dom" % (filname, filname, filname)
-        with open(filname + ".ip4", 'w') as f:
+        print "Start of writing items in separate files: %s.ip4, %s.ip6, %s.dom" % (filename, filename, filename)
+        with open(filename + ".ip4", 'w') as f:
             for line in ip4_data:
                 print >> f, line
-        with open(filname + ".ip6", 'w') as f:
+        with open(filename + ".ip6", 'w') as f:
             for line in ip6_data:
                 print >> f, line
-        with open(filname + ".dom", 'w') as f:
+        with open(filename + ".dom", 'w') as f:
             for line in dom_data:
                 print >> f, line
+
+### =================================================================
+def progress_bar(current_position, total_number):
+    a = (current_position + 1) / float(total_number)
+    sys.stdout.write("\r[{0:50s}] {1:.1f}%".format('#' * int(a * 50), a * 100))
+    if a == 1:
+        print ''
 
 ### ==================================================================
 if __name__ == '__main__':
@@ -158,5 +164,5 @@ if __name__ == '__main__':
     ip4_feed = generate_ip4(options.ip4_cnt, options.ip_type)
     ip6_feed = generate_ip6(options.ip6_cnt)
     dom_feed = generate_domain(options.dom_cnt)
-    
+        
     store_in_file (options.separate, options.filename, ip4_feed, ip6_feed, dom_feed)
