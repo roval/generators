@@ -74,7 +74,7 @@ def generate_domain(cnt):
 
     dom_list = []
     if cnt == 0:
-        print 'Domains will not be added in file'
+        print 'Domains        will not be added in file'
     else:
         print 'Start of generation of Domains'
         for i in range(cnt):
@@ -90,35 +90,45 @@ def generate_domain(cnt):
 ### =================================================================
 def store_in_file(store_in_diff_file, filename, ip4_data, ip6_data, dom_data):
 
-    if store_in_diff_file == False:
-        for exist_files in os.listdir("./"):
-           if exist_files == filename:
-               filename = filename + str(1)
-               print "WARNING: file name was changed !!!"
-        print "Start of writing items in file %s" % filename
-        with open(filename, 'w') as f:
-            for line in ip4_data:
-                print >> f, line
-            for line in ip6_data:
-                print >> f, line
-            for line in dom_data:
-                print >> f, line
+    if len(ip4_data) + len(ip6_data) + len(dom_data) == 0:
+        print 'There are no any data that should be stored in file'
     else:
-        for exist_files in os.listdir("./"):
-            if (exist_files.split('.')[0]) == filename:
-                filename = filename + str(1)
-                print "WARNING: file name was changed !!!"   
-        print "Start of writing items in separate files: %s.ip4, %s.ip6, %s.dom" % (filename, filename, filename)
-        with open(filename + ".ip4", 'w') as f:
-            for line in ip4_data:
-                print >> f, line
-        with open(filename + ".ip6", 'w') as f:
-            for line in ip6_data:
-                print >> f, line
-        with open(filename + ".dom", 'w') as f:
-            for line in dom_data:
-                print >> f, line
-
+        if store_in_diff_file == False:
+            for exist_files in os.listdir("./"):
+               if exist_files == filename:
+                   old_filename = filename
+                   filename = filename + str(1)
+                   print "\nWARNING: File %s already exists. New output file name will be %s \n" % (old_filename, filename)
+            print "Start of writing items in file %s" % filename
+            with open(filename, 'w') as f:
+                for line in ip4_data:
+                    print >> f, line
+                for line in ip6_data:
+                    print >> f, line
+                for line in dom_data:
+                    print >> f, line
+        else:
+            for exist_files in os.listdir("./"):
+                if (exist_files.split('.')[0]) == filename:
+                    old_filename = filename
+                    filename = filename + str(1)
+                    print "\nWARNING: Files %s already exists. New output files name will start on %s \n" % (old_filename, filename)
+            if len(ip4_data) > 0:
+                print "IPv4   feed file will be stored in file %s" % filename + '.ip4'
+                with open(filename + ".ip4", 'w') as f:
+                    for line in ip4_data:
+                        print >> f, line
+            if len(ip6_data) > 0:
+                print "IPv6   feed file will be stored in file %s" % filename + '.ip6'
+                with open(filename + ".ip6", 'w') as f:
+                    for line in ip6_data:
+                        print >> f, line
+            if len(dom_data) > 0:
+                print "Domain feed file will be stored in file %s" % filename + '.dom'
+                with open(filename + ".dom", 'w') as f:
+                    for line in dom_data:
+                        print >> f, line
+            
 ### =================================================================
 def progress_bar(current_position, total_number):
     a = (current_position + 1) / float(total_number)
