@@ -1,3 +1,6 @@
+#!/usr/bin/env python
+# -*- coding: utf-8 -*-
+
 """
 File for generation files for feak feed
 """
@@ -25,7 +28,7 @@ parser.add_option("-D", "--domain", default=0, metavar="DDD",
                   action="store", type="int", dest="dom_cnt",
                   help="generate fake feeds file that will contain DDD"\
                   " domain names")
-parser.add_option("-s", "--sepatare",
+parser.add_option("-s", "--separate",
                   action="store_true", dest="separate", default=False,
                   help="store each fake feeds file as a separate file")
 parser.add_option("-d", "--debug",
@@ -35,17 +38,15 @@ parser.add_option("-d", "--debug",
 parser.add_option("-f", "--file", metavar="FILE", default="feed",
                   action="store", type="string", dest="filename",
                   help="the name of fake feed file. In case when we use --separate options"\
-                  " there will be created several files with this NAME and additional extention"\
+                  " there will be created several files with this NAME and additional extension"\
                   " (i.e: FILE.ip4, FILE.ip6, FILE.dom)")
 (options, args) = parser.parse_args()
 
 ### =============================================================
-
-
 def generate_ip4(cnt, flg):
 
     """ 
-    cnt (int)  - quantiy of ip4 addresses
+    cnt (int)  - quantity of ip4 addresses
     flg (bool) - flag that shows or include in file real (true) or grey (false) IP addresses
     """
     ip4_list = []
@@ -54,22 +55,19 @@ def generate_ip4(cnt, flg):
     else:
         if flg == False:
             print 'Start of generation of real IPv4 addresses'
-            i = 0
-            for i in range(cnt):
+            for _ in range(cnt):
                 octet1 = octet2 = octet3 = octet4 = 0
                 octet1 = randint(1, 223)
-                if octet1 == 127:
-                    octet1 = 128
+                if octet1 in (10, 127, 172, 192):
+                    octet1 = octet1 + 1
                 octet2 = randint(0, 255)
                 octet3 = randint(0, 255)
                 octet4 = randint(1, 254)
-                ip4 = str(octet1)+'.'+str(octet2)+'.'+str(octet3)+'.'+str(octet4)
-                ip4_list.append(ip4)
+                ip4_list.append(str(octet1)+'.'+str(octet2)+'.'+str(octet3)+'.'+str(octet4))
         else:
             print 'Start of generation of grey IPv4 addresses'
-            i = 0
             private_network_first_octet = [10, 172, 192]
-            for i in range(cnt):
+            for _ in range(cnt):
                 octet1 = octet2 = octet3 = octet4 = 0
                 octet1 = choice(private_network_first_octet)
                 if octet1 == 192:
@@ -80,14 +78,11 @@ def generate_ip4(cnt, flg):
                     octet2 = randint(0, 255)
                 octet3 = randint(0, 255)
                 octet4 = randint(1, 254)
-                ip4 = str(octet1)+'.'+str(octet2)+'.'+str(octet3)+'.'+str(octet4)      
-                ip4_list.append(ip4)
+                ip4_list.append(str(octet1)+'.'+str(octet2)+'.'+str(octet3)+'.'+str(octet4))
     
-#    for item in ip4_list:
-#        print item
+    return ip4_list
 
 ### =================================================================
-
 def generate_ip6(cnt):
 
     ip6_list = []
@@ -96,20 +91,13 @@ def generate_ip6(cnt):
     else:
         print 'Start of generation of IPv6 addresses'
         i = 0
-        for i in range(cnt):
-            #we will generate ony 3 hex numbers from first part: 2xxx (16*16*16=4096)
-            ip6 = str(2)+str(hex(randint(0, 4096))[2:])
-            for j in range(7):
-                ip6 = ip6+':'+(hex(randint(1, 65535)))[2:]
-            ip6_list.append(ip6)
-
-#   for item in ip6_list:
-#       print item
+        for _ in range(cnt):
+            ip6_list.append("2001:"+":".join(("%x" % randint(0, 65536) for j in range(7))))
+    return ip6_list
 
 ### =================================================================
-
 def generate_domain(cnt):
-# initial TLD - onetime they will be moved out in external file
+    # initial TLD - one day they will be moved out in external file
     tld0 = ['en', 'ru', 'ua']
     tld1 = ['com', 'net', 'gov']
 
@@ -126,14 +114,10 @@ def generate_domain(cnt):
             domain_level_1 = choice(tld1)
             dom = dom+'.'+domain_level_1+'.'+domain_level_0
             dom_list.append(dom)
-
-#   for item in dom_list:
-#      print item 
+    return dom_list
 
 ### =================================================================
-
-
-def store_in_file(flg, fnm):
+def store_in_file(flg, fnm, ip4_data, ip6_data, dom_data):
     """
       flg - flag that shows create all items in one file (false) or separete it by type (True)
       fnm - file name
@@ -143,17 +127,32 @@ def store_in_file(flg, fnm):
             if fff == fnm:
                 fnm = fnm+str(1)
         print "Start of writing items in file %s" % fnm
+        with open(fnm, 'w') as f:
+            for line in ip4_data:
+                print >> f, line
+            for line in ip6_data:
+                print >> f, line
+            for line in dom_data:
+                print >> f, line
     else:
         for fff in os.listdir("./"):
             if (fff.split('.')[0]) == fnm:
                 fnm = fnm+str(1)   
-        print "Start of writing items in separate files: %s.ip4, %s.ip6, %s.dom" % (fnm, fnm, fnm) 
-
+        print "Start of writing items in separate files: %s.ip4, %s.ip6, %s.dom" % (fnm, fnm, fnm)
+        with open(fnm+".ip4", 'w') as f:
+            for line in ip4_data:
+                print >> f, line
+        with open(fnm+".ip6", 'w') as f:
+            for line in ip6_data:
+                print >> f, line
+        with open(fnm+".dom", 'w') as f:
+            for line in dom_data:
+                print >> f, line
 ### ==================================================================
-
-
-generate_ip4(options.ip4_cnt, options.ip_type)
-generate_ip6(options.ip6_cnt)
-generate_domain(options.dom_cnt)
-store_in_file (options.separate, options.filename)
-
+if __name__ == '__main__':
+    
+    ip4_feed = generate_ip4(options.ip4_cnt, options.ip_type)
+    ip6_feed = generate_ip6(options.ip6_cnt)
+    dom_feed = generate_domain(options.dom_cnt)
+    
+    store_in_file (options.separate, options.filename, ip4_feed, ip6_feed, dom_feed)
