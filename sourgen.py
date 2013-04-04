@@ -1,46 +1,14 @@
 #!/usr/bin/env python
 # -*- coding: utf-8 -*-
 
-"""
-File for generation files for feak feed
-"""
+### File for generation file(s) for fake feed
 
 import os
+
 from optparse import OptionParser
 from random import randint
 from random import choice
 from string import letters
-
-parser = OptionParser()
-parser.add_option("-4", "--ip4", default=0, metavar="NNN",
-                  action="store", type="int", dest="ip4_cnt",
-                  help="generate fake feeds file that will contain NNN"\
-                  " IPv4 addresses")
-parser.add_option("-6", "--ip6", default=0, metavar="NNN",
-                  action="store", type="int", dest="ip6_cnt",
-                  help="generate fake feeds file that will contain NNN"\
-                  " IPv6 addresses")
-parser.add_option("-g", "--grey", default=False,
-                  action="store_true", dest="ip_type",
-                  help="take into files only 'grey' IP addresses"\
-                  " (e.g: 192.168.0.0/24)")
-parser.add_option("-D", "--domain", default=0, metavar="DDD",
-                  action="store", type="int", dest="dom_cnt",
-                  help="generate fake feeds file that will contain DDD"\
-                  " domain names")
-parser.add_option("-s", "--separate",
-                  action="store_true", dest="separate", default=False,
-                  help="store each fake feeds file as a separate file")
-parser.add_option("-d", "--debug",
-                  action="store_true", dest="debug", default=False,
-                  help="print status information in stdout."\
-                  " Under construction")
-parser.add_option("-f", "--file", metavar="FILE", default="feed",
-                  action="store", type="string", dest="filename",
-                  help="the name of fake feed file. In case when we use --separate options"\
-                  " there will be created several files with this NAME and additional extension"\
-                  " (i.e: FILE.ip4, FILE.ip6, FILE.dom)")
-(options, args) = parser.parse_args()
 
 ### =============================================================
 def generate_ip4(cnt, flg):
@@ -54,7 +22,7 @@ def generate_ip4(cnt, flg):
         print 'IPv4 addresses will not be added in file'
     else:
         if flg == False:
-            print 'Start of generation of real IPv4 addresses'
+            print '\rStart of generation of real IPv4 addresses'
             for _ in range(cnt):
                 octet1 = octet2 = octet3 = octet4 = 0
                 octet1 = randint(1, 223)
@@ -64,6 +32,7 @@ def generate_ip4(cnt, flg):
                 octet3 = randint(0, 255)
                 octet4 = randint(1, 254)
                 ip4_list.append(str(octet1) + '.' + str(octet2) + '.' + str(octet3) + '.' + str(octet4))
+            print "\r Done"
         else:
             print 'Start of generation of grey IPv4 addresses'
             private_network_first_octet = [10, 172, 192]
@@ -126,6 +95,7 @@ def store_in_file(flg, filname, ip4_data, ip6_data, dom_data):
         for exist_files in os.listdir("./"):
             if exist_files == filname:
                 filname = filname + str(1)
+                print "WARNING: file name was changed !!!" 
         print "Start of writing items in file %s" % filname
         with open(filname, 'w') as f:
             for line in ip4_data:
@@ -137,7 +107,8 @@ def store_in_file(flg, filname, ip4_data, ip6_data, dom_data):
     else:
         for exist_files in os.listdir("./"):
             if (exist_files.split('.')[0]) == filname:
-                filname = filname + str(1)   
+                filname = filname + str(1)
+                print "WARNING: file name was changed !!!"   
         print "Start of writing items in separate files: %s.ip4, %s.ip6, %s.dom" % (filname, filname, filname)
         with open(filname + ".ip4", 'w') as f:
             for line in ip4_data:
@@ -148,8 +119,41 @@ def store_in_file(flg, filname, ip4_data, ip6_data, dom_data):
         with open(filname + ".dom", 'w') as f:
             for line in dom_data:
                 print >> f, line
+
 ### ==================================================================
 if __name__ == '__main__':
+
+    parser = OptionParser()
+    parser.add_option("-4", "--ip4", default=0, metavar="NNN",
+                      action="store", type="int", dest="ip4_cnt",
+                      help="generate fake feeds file that will contain NNN"\
+                      " IPv4 addresses")
+    parser.add_option("-6", "--ip6", default=0, metavar="NNN",
+                      action="store", type="int", dest="ip6_cnt",
+                      help="generate fake feeds file that will contain NNN"\
+                      " IPv6 addresses")
+    parser.add_option("-g", "--grey", default=False,
+                      action="store_true", dest="ip_type",
+                      help="take into files only 'grey' IP addresses"\
+                      " (e.g: 192.168.0.0/24)")
+    parser.add_option("-D", "--domain", default=0, metavar="DDD",
+                      action="store", type="int", dest="dom_cnt",
+                      help="generate fake feeds file that will contain DDD"\
+                      " domain names")
+    parser.add_option("-s", "--separate",
+                      action="store_true", dest="separate", default=False,
+                      help="store each fake feeds file as a separate file")
+    parser.add_option("-d", "--debug",
+                      action="store_true", dest="debug", default=False,
+                      help="print status information in stdout."\
+                      " Under construction")
+    parser.add_option("-f", "--file", metavar="FILE", default="feed",
+                      action="store", type="string", dest="filename",
+                      help="the name of fake feed file. In case when we use --separate options"\
+                      " there will be created several files with this NAME and additional extension"\
+                      " (i.e: FILE.ip4, FILE.ip6, FILE.dom)")
+    (options, args) = parser.parse_args()
+
     
     ip4_feed = generate_ip4(options.ip4_cnt, options.ip_type)
     ip6_feed = generate_ip6(options.ip6_cnt)
